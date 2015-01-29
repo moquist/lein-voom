@@ -384,19 +384,22 @@
     (close [])))
 
 (defn try-once-resolve-voom-version [project]
-  (let [non-dev-proj (project/set-profiles project [] [:dev :user])]
+  (let [non-dev-proj project #_(project/set-profiles project [:dev] [:user])]
+    (println :non-dev-proj non-dev-proj)
     (try
       (with-log-level Level/OFF
         #(binding [*err* null-writer]
            (leiningen.core.classpath/resolve-dependencies :dependencies non-dev-proj)))
-      :ok
+      (or (println :OK!) :ok)
       (catch Exception e
         ;; lein resolve-dependencies wraps a
         ;; DependencyResolutionException in an ex-info, so if we want
         ;; the real cause of failure we have to dig for it:
         (if-let [arts (seq (missing-artifacts-from-exception e))]
-          (doseq [art arts]
-            (resolve-artifact e non-dev-proj art))
+          (do
+            (println :arts arts)
+            (doseq [art arts]
+              (resolve-artifact e non-dev-proj art)))
           (throw e))))))
 
 (defn build-deps
